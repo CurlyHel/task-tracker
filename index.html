@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H Wilson Task Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --property: #2563eb;
+    --estate: #7c3aed;
+    --personal: #16a34a;
+    --erp: #d97706;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  header {
+    background: #1e293b;
+    color: white;
+    padding: 18px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
+  header p { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
+
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-btn {
+    white-space: nowrap;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 2px solid var(--border);
+    background: white;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .filter-btn.active {
+    color: white;
+    border-color: transparent;
+  }
+  .filter-btn[data-cat="all"].active      { background: #1e293b; }
+  .filter-btn[data-cat="property"].active { background: var(--property); }
+  .filter-btn[data-cat="estate"].active   { background: var(--estate); }
+  .filter-btn[data-cat="personal"].active { background: var(--personal); }
+  .filter-btn[data-cat="erp"].active      { background: var(--erp); }
+
+  .add-area {
+    margin: 16px;
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  #mic-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #1e293b;
+    border: none;
+    color: white;
+    font-size: 1.4rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.1s;
+  }
+  #mic-btn.listening {
+    background: #dc2626;
+    animation: pulse 1s infinite;
+  }
+  #mic-btn.hidden { display: none; }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(220,38,38,0); }
+  }
+
+  #task-input {
+    flex: 1;
+    padding: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  #task-input:focus { border-color: #1e293b; }
+
+  .bottom-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    align-items: center;
+  }
+
+  #cat-select {
+    flex: 1;
+    padding: 11px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: white;
+    outline: none;
+    color: var(--text);
+  }
+
+  #save-btn {
+    padding: 11px 22px;
+    background: #1e293b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #save-btn:active { background: #0f172a; }
+
+  #voice-status {
+    font-size: 0.8rem;
+    color: #dc2626;
+    margin-top: 8px;
+    min-height: 18px;
+    font-style: italic;
+  }
+
+  .section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    padding: 6px 20px 4px;
+    margin-top: 8px;
+  }
+
+  .task-list { padding: 0 16px; }
+
+  .task-card {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 14px 14px 12px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: opacity 0.2s;
+  }
+  .task-card.done { opacity: 0.55; }
+
+  .task-check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.15s;
+    margin-top: 1px;
+  }
+  .task-card.done .task-check { background: #16a34a; border-color: #16a34a; color: white; }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-text {
+    font-size: 0.97rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+  }
+  .task-card.done .task-text { text-decoration: line-through; color: var(--muted); }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .cat-chip {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: white;
+  }
+  .cat-chip.property { background: var(--property); }
+  .cat-chip.estate   { background: var(--estate); }
+  .cat-chip.personal { background: var(--personal); }
+  .cat-chip.erp      { background: var(--erp); }
+
+  .task-time { font-size: 0.72rem; color: var(--muted); }
+
+  .task-del {
+    background: none;
+    border: none;
+    color: #cbd5e1;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 2px 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+  .task-del:hover { color: #ef4444; }
+
+  .empty-msg {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 32px 20px;
+  }
+
+  .done-toggle {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 0.82rem;
+    cursor: pointer;
+    padding: 4px 20px;
+    text-align: left;
+    text-decoration: underline;
+    display: block;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Task Tracker</h1>
+  <p id="today-date"></p>
+</header>
+
+<div class="filter-bar">
+  <button class="filter-btn active" data-cat="all">All</button>
+  <button class="filter-btn" data-cat="property">Property</button>
+  <button class="filter-btn" data-cat="estate">Estate &amp; Admin</button>
+  <button class="filter-btn" data-cat="personal">Personal</button>
+  <button class="filter-btn" data-cat="erp">ERP Work</button>
+</div>
+
+<div class="add-area">
+  <div class="input-row">
+    <button id="mic-btn" title="Tap to speak">🎤</button>
+    <input type="text" id="task-input" placeholder="Type a task or tap the mic…" autocomplete="off">
+  </div>
+  <div id="voice-status"></div>
+  <div class="bottom-row">
+    <select id="cat-select">
+      <option value="property">Property</option>
+      <option value="estate">Estate &amp; Admin</option>
+      <option value="personal">Personal</option>
+      <option value="erp">ERP Work</option>
+    </select>
+    <button id="save-btn">Save</button>
+  </div>
+</div>
+
+<div id="active-section">
+  <div class="section-label">To Do</div>
+  <div class="task-list" id="active-list"></div>
+</div>
+
+<div id="done-section" style="display:none">
+  <button class="done-toggle" id="done-toggle">▶ Completed tasks</button>
+  <div class="task-list" id="done-list" style="display:none"></div>
+</div>
+
+<script>
+  // --- Date header ---
+  const dateEl = document.getElementById('today-date');
+  dateEl.textContent = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  // --- State ---
+  let tasks = JSON.parse(localStorage.getItem('hw_tasks') || '[]');
+  let activeFilter = 'all';
+  let doneOpen = false;
+  let recognition = null;
+  let autoSaveTimer = null;
+
+  function save() {
+    localStorage.setItem('hw_tasks', JSON.stringify(tasks));
+  }
+
+  // --- Category labels ---
+  const CAT_LABELS = { property: 'Property', estate: 'Estate & Admin', personal: 'Personal', erp: 'ERP Work' };
+
+  // --- Render ---
+  function render() {
+    const activeList = document.getElementById('active-list');
+    const doneList = document.getElementById('done-list');
+    const doneSection = document.getElementById('done-section');
+
+    const filtered = activeFilter === 'all' ? tasks : tasks.filter(t => t.cat === activeFilter);
+    const active = filtered.filter(t => !t.done);
+    const done = filtered.filter(t => t.done);
+
+    activeList.innerHTML = active.length ? active.map(taskHTML).join('') : '<div class="empty-msg">No tasks here — tap the mic or type above to add one.</div>';
+    doneList.innerHTML = done.map(taskHTML).join('');
+    doneSection.style.display = done.length ? '' : 'none';
+
+    document.getElementById('done-toggle').textContent = (doneOpen ? '▼' : '▶') + ` Completed (${done.length})`;
+    doneList.style.display = doneOpen ? '' : 'none';
+  }
+
+  function taskHTML(t) {
+    const check = t.done ? '✓' : '';
+    const time = new Date(t.ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    return `<div class="task-card ${t.done ? 'done' : ''}" data-id="${t.id}">
+      <div class="task-check" onclick="toggleDone('${t.id}')">${check}</div>
+      <div class="task-body">
+        <div class="task-text">${escHtml(t.text)}</div>
+        <div class="task-meta">
+          <span class="cat-chip ${t.cat}">${CAT_LABELS[t.cat]}</span>
+          <span class="task-time">${time}</span>
+        </div>
+      </div>
+      <button class="task-del" onclick="deleteTask('${t.id}')" title="Delete">✕</button>
+    </div>`;
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // --- Actions ---
+  function addTask() {
+    const input = document.getElementById('task-input');
+    const text = input.value.trim();
+    if (!text) return;
+    const cat = document.getElementById('cat-select').value;
+    tasks.unshift({ id: Date.now().toString(), text, cat, done: false, ts: Date.now() });
+    save();
+    input.value = '';
+    document.getElementById('voice-status').textContent = '';
+    render();
+  }
+
+  function toggleDone(id) {
+    const t = tasks.find(t => t.id === id);
+    if (t) { t.done = !t.done; save(); render(); }
+  }
+
+  function deleteTask(id) {
+    tasks = tasks.filter(t => t.id !== id);
+    save();
+    render();
+  }
+
+  // --- Filter ---
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.cat;
+      render();
+    });
+  });
+
+  // --- Done toggle ---
+  document.getElementById('done-toggle').addEventListener('click', () => {
+    doneOpen = !doneOpen;
+    render();
+  });
+
+  // --- Save button ---
+  document.getElementById('save-btn').addEventListener('click', addTask);
+  document.getElementById('task-input').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+  // --- Voice ---
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micBtn = document.getElementById('mic-btn');
+  const voiceStatus = document.getElementById('voice-status');
+
+  if (!SpeechRecognition) {
+    micBtn.classList.add('hidden');
+    document.getElementById('task-input').placeholder = 'Type your task here…';
+  } else {
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-GB';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      micBtn.classList.add('listening');
+      voiceStatus.textContent = 'Listening… speak your task';
+    };
+
+    recognition.onresult = (e) => {
+      let interim = '', final = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) final += t;
+        else interim += t;
+      }
+      document.getElementById('task-input').value = final || interim;
+      if (final) {
+        voiceStatus.textContent = 'Got it — tap Save or speak again';
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(addTask, 1500);
+      }
+    };
+
+    recognition.onerror = (e) => {
+      micBtn.classList.remove('listening');
+      voiceStatus.textContent = e.error === 'not-allowed' ? 'Microphone permission denied — please allow access' : 'Could not hear — try again';
+    };
+
+    recognition.onend = () => {
+      micBtn.classList.remove('listening');
+    };
+
+    micBtn.addEventListener('click', () => {
+      if (micBtn.classList.contains('listening')) {
+        recognition.stop();
+      } else {
+        clearTimeout(autoSaveTimer);
+        document.getElementById('task-input').value = '';
+        voiceStatus.textContent = '';
+        recognition.start();
+      }
+    });
+  }
+
+  // --- Init ---
+  render();
+</script>
+</body>
+</html>
