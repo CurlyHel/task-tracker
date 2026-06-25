@@ -14,6 +14,7 @@
     --estate: #7c3aed;
     --personal: #16a34a;
     --erp: #d97706;
+    --shopping: #db2777;
     --bg: #f8fafc;
     --card: #ffffff;
     --text: #1e293b;
@@ -73,6 +74,7 @@
   .filter-btn[data-cat="estate"].active   { background: var(--estate); }
   .filter-btn[data-cat="personal"].active { background: var(--personal); }
   .filter-btn[data-cat="erp"].active      { background: var(--erp); }
+  .filter-btn[data-cat="shopping"].active { background: var(--shopping); }
 
   .add-area {
     margin: 16px;
@@ -233,6 +235,7 @@
   .cat-chip.estate   { background: var(--estate); }
   .cat-chip.personal { background: var(--personal); }
   .cat-chip.erp      { background: var(--erp); }
+  .cat-chip.shopping { background: var(--shopping); }
 
   .task-time { font-size: 0.72rem; color: var(--muted); }
 
@@ -283,6 +286,7 @@
   <button class="filter-btn" data-cat="estate">Estate &amp; Admin</button>
   <button class="filter-btn" data-cat="personal">Personal</button>
   <button class="filter-btn" data-cat="erp">ERP Work</button>
+  <button class="filter-btn" data-cat="shopping">Shopping</button>
 </div>
 
 <div class="add-area">
@@ -297,6 +301,7 @@
       <option value="estate">Estate &amp; Admin</option>
       <option value="personal">Personal</option>
       <option value="erp">ERP Work</option>
+      <option value="shopping">Shopping</option>
     </select>
     <button id="save-btn">Save</button>
   </div>
@@ -329,7 +334,7 @@
   }
 
   // --- Category labels ---
-  const CAT_LABELS = { property: 'Property', estate: 'Estate & Admin', personal: 'Personal', erp: 'ERP Work' };
+  const CAT_LABELS = { property: 'Property', estate: 'Estate & Admin', personal: 'Personal', erp: 'ERP Work', shopping: 'Shopping' };
 
   // --- Render ---
   function render() {
