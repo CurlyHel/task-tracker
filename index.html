@@ -38,9 +38,26 @@
     position: sticky;
     top: 0;
     z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
   }
   header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
   header p { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
+
+  .header-actions { display: flex; gap: 8px; margin-top: 2px; }
+  .hdr-btn {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #cbd5e1;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .hdr-btn:active { background: rgba(255,255,255,0.22); }
 
   .filter-bar {
     display: flex;
@@ -276,8 +293,14 @@
 <body>
 
 <header>
-  <h1>Task Tracker</h1>
-  <p id="today-date"></p>
+  <div>
+    <h1>Task Tracker</h1>
+    <p id="today-date"></p>
+  </div>
+  <div class="header-actions">
+    <button class="hdr-btn" onclick="exportTasks()">Export</button>
+    <button class="hdr-btn" onclick="importTasks()">Import</button>
+  </div>
 </header>
 
 <div class="filter-bar">
@@ -471,6 +494,44 @@
         recognition.start();
       }
     });
+  }
+
+  // --- Export / Import ---
+  function exportTasks() {
+    const data = JSON.stringify(tasks, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tasks-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importTasks() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (!Array.isArray(imported)) throw new Error();
+          tasks = imported;
+          save();
+          render();
+          voiceStatus.textContent = imported.length + ' tasks restored.';
+          setTimeout(() => { voiceStatus.textContent = ''; }, 3000);
+        } catch {
+          alert('Could not read file — please use a tasks-backup.json exported from this app.');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   }
 
   // --- Init ---
