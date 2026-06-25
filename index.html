@@ -256,7 +256,7 @@
 
   .task-time { font-size: 0.72rem; color: var(--muted); }
 
-  .task-del {
+  .task-del, .task-edit {
     background: none;
     border: none;
     color: #cbd5e1;
@@ -267,7 +267,19 @@
     flex-shrink: 0;
     transition: color 0.15s;
   }
-  .task-del:hover { color: #ef4444; }
+  .task-del:hover  { color: #ef4444; }
+  .task-edit:hover { color: #2563eb; }
+
+  .edit-input {
+    font-size: 0.97rem;
+    line-height: 1.4;
+    width: 100%;
+    border: 1.5px solid #2563eb;
+    border-radius: 6px;
+    padding: 4px 8px;
+    outline: none;
+    font-family: inherit;
+  }
 
   .empty-msg {
     text-align: center;
@@ -389,6 +401,7 @@
           <span class="task-time">${time}</span>
         </div>
       </div>
+      <button class="task-edit" onclick="editTask('${t.id}')" title="Edit">✏</button>
       <button class="task-del" onclick="deleteTask('${t.id}')" title="Delete">✕</button>
     </div>`;
   }
@@ -494,6 +507,34 @@
         recognition.start();
       }
     });
+  }
+
+  // --- Edit ---
+  function editTask(id) {
+    const card = document.querySelector(`.task-card[data-id="${id}"]`);
+    const textEl = card.querySelector('.task-text');
+    const task = tasks.find(t => t.id === id);
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = task.text;
+    input.className = 'edit-input';
+    textEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    let committed = false;
+    function commit() {
+      if (committed) return;
+      committed = true;
+      const newText = input.value.trim();
+      if (newText) { task.text = newText; save(); }
+      render();
+    }
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') commit();
+      if (e.key === 'Escape') { committed = true; render(); }
+    });
+    input.addEventListener('blur', commit);
   }
 
   // --- Export / Import ---
