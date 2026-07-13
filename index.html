@@ -320,6 +320,9 @@
     padding: 4px 8px;
     outline: none;
     font-family: inherit;
+    resize: none;
+    overflow: hidden;
+    display: block;
   }
 
   .empty-msg {
@@ -560,13 +563,24 @@
     const card = document.querySelector(`.task-card[data-id="${id}"]`);
     const textEl = card.querySelector('.task-text');
     const task = tasks.find(t => t.id === id);
-    const input = document.createElement('input');
-    input.type = 'text';
+    const input = document.createElement('textarea');
     input.value = task.text;
     input.className = 'edit-input';
+    input.rows = 1;
     textEl.replaceWith(input);
+
+    // Grow to fit the text so every word is visible and tappable
+    function autosize() {
+      input.style.height = 'auto';
+      input.style.height = input.scrollHeight + 'px';
+    }
+    autosize();
+    input.addEventListener('input', autosize);
+
+    // Cursor at the end, nothing highlighted — tap anywhere to reposition
     input.focus();
-    input.select();
+    const end = input.value.length;
+    input.setSelectionRange(end, end);
 
     let committed = false;
     function commit() {
@@ -577,7 +591,7 @@
       render();
     }
     input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') commit();
+      if (e.key === 'Enter') { e.preventDefault(); commit(); }
       if (e.key === 'Escape') { committed = true; render(); }
     });
     input.addEventListener('blur', commit);
