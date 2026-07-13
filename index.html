@@ -32,14 +32,14 @@
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
+    background: linear-gradient(180deg, #eef2ff 0%, #fdf4ff 55%, #fff1f2 100%) fixed;
     color: var(--text);
     min-height: 100vh;
     padding-bottom: 40px;
   }
 
   header {
-    background: #1e293b;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #db2777 100%);
     color: white;
     padding: 18px 20px 14px;
     position: sticky;
@@ -48,9 +48,10 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    box-shadow: 0 2px 12px rgba(124,58,237,0.35);
   }
   header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
-  header p { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
+  header p { font-size: 0.8rem; color: rgba(255,255,255,0.85); margin-top: 2px; }
 
   .header-actions { display: flex; gap: 8px; margin-top: 2px; }
   .hdr-btn {
@@ -71,7 +72,8 @@
     gap: 8px;
     padding: 14px 16px;
     overflow-x: auto;
-    background: white;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(6px);
     border-bottom: 1px solid var(--border);
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
@@ -105,10 +107,10 @@
   .add-area {
     margin: 16px;
     background: white;
-    border-radius: var(--radius);
+    border-radius: 16px;
     border: 1px solid var(--border);
     padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 16px rgba(124,58,237,0.12);
   }
 
   .input-row {
@@ -121,7 +123,8 @@
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: #1e293b;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    box-shadow: 0 3px 10px rgba(139,92,246,0.4);
     border: none;
     color: white;
     font-size: 1.4rem;
@@ -176,16 +179,17 @@
 
   #save-btn {
     padding: 11px 22px;
-    background: #1e293b;
+    background: linear-gradient(135deg, #4f46e5, #a855f7);
     color: white;
     border: none;
     border-radius: 10px;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s;
+    box-shadow: 0 3px 10px rgba(139,92,246,0.35);
+    transition: opacity 0.15s;
   }
-  #save-btn:active { background: #0f172a; }
+  #save-btn:active { opacity: 0.85; }
 
   #voice-status {
     font-size: 0.8rem;
@@ -212,14 +216,22 @@
     background: white;
     border-radius: var(--radius);
     border: 1px solid var(--border);
+    border-left-width: 5px;
     padding: 14px 14px 12px;
     margin-bottom: 10px;
     display: flex;
     gap: 12px;
     align-items: flex-start;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(30,41,59,0.08);
     transition: opacity 0.2s;
   }
+  .task-card.cat-today    { border-left-color: var(--today); }
+  .task-card.cat-urgent   { border-left-color: var(--urgent); }
+  .task-card.cat-property { border-left-color: var(--property); }
+  .task-card.cat-estate   { border-left-color: var(--estate); }
+  .task-card.cat-personal { border-left-color: var(--personal); }
+  .task-card.cat-erp      { border-left-color: var(--erp); }
+  .task-card.cat-shopping { border-left-color: var(--shopping); }
   .task-card.done { opacity: 0.55; }
 
   .task-check {
@@ -345,14 +357,14 @@
 </header>
 
 <div class="filter-bar">
-  <button class="filter-btn active" data-cat="all">All</button>
-  <button class="filter-btn" data-cat="today">Today</button>
-  <button class="filter-btn" data-cat="urgent">Urgent</button>
-  <button class="filter-btn" data-cat="property">Property</button>
-  <button class="filter-btn" data-cat="estate">Estate &amp; Admin</button>
-  <button class="filter-btn" data-cat="personal">Personal</button>
-  <button class="filter-btn" data-cat="erp">ERP Work</button>
-  <button class="filter-btn" data-cat="shopping">Shopping</button>
+  <button class="filter-btn active" data-cat="all">✨ All</button>
+  <button class="filter-btn" data-cat="today">☀️ Today</button>
+  <button class="filter-btn" data-cat="urgent">🔥 Urgent</button>
+  <button class="filter-btn" data-cat="property">🏠 Property</button>
+  <button class="filter-btn" data-cat="estate">📋 Estate &amp; Admin</button>
+  <button class="filter-btn" data-cat="personal">🌱 Personal</button>
+  <button class="filter-btn" data-cat="erp">💼 ERP Work</button>
+  <button class="filter-btn" data-cat="shopping">🛒 Shopping</button>
 </div>
 
 <div class="add-area">
@@ -363,13 +375,13 @@
   <div id="voice-status"></div>
   <div class="bottom-row">
     <select id="cat-select">
-      <option value="today">Today</option>
-      <option value="urgent">Urgent</option>
-      <option value="property">Property</option>
-      <option value="estate">Estate &amp; Admin</option>
-      <option value="personal">Personal</option>
-      <option value="erp">ERP Work</option>
-      <option value="shopping">Shopping</option>
+      <option value="today">☀️ Today</option>
+      <option value="urgent">🔥 Urgent</option>
+      <option value="property">🏠 Property</option>
+      <option value="estate">📋 Estate &amp; Admin</option>
+      <option value="personal">🌱 Personal</option>
+      <option value="erp">💼 ERP Work</option>
+      <option value="shopping">🛒 Shopping</option>
     </select>
     <button id="save-btn">Save</button>
   </div>
@@ -403,6 +415,7 @@
 
   // --- Category labels ---
   const CAT_LABELS = { today: 'Today', urgent: 'Urgent', property: 'Property', estate: 'Estate & Admin', personal: 'Personal', erp: 'ERP Work', shopping: 'Shopping' };
+  const CAT_EMOJI = { today: '☀️', urgent: '🔥', property: '🏠', estate: '📋', personal: '🌱', erp: '💼', shopping: '🛒' };
 
   // --- Render ---
   function render() {
@@ -414,7 +427,7 @@
     const active = filtered.filter(t => !t.done);
     const done = filtered.filter(t => t.done);
 
-    activeList.innerHTML = active.length ? active.map(taskHTML).join('') : '<div class="empty-msg">No tasks here — tap the mic or type above to add one.</div>';
+    activeList.innerHTML = active.length ? active.map(taskHTML).join('') : '<div class="empty-msg">🎉 Nothing to do here! Tap the mic or type above to add a task.</div>';
     doneList.innerHTML = done.map(taskHTML).join('');
     doneSection.style.display = done.length ? '' : 'none';
 
@@ -425,12 +438,12 @@
   function taskHTML(t) {
     const check = t.done ? '✓' : '';
     const time = new Date(t.ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-    return `<div class="task-card ${t.done ? 'done' : ''}" data-id="${t.id}">
+    return `<div class="task-card cat-${t.cat} ${t.done ? 'done' : ''}" data-id="${t.id}">
       <div class="task-check" onclick="toggleDone('${t.id}')">${check}</div>
       <div class="task-body">
         <div class="task-text">${escHtml(t.text)}</div>
         <div class="task-meta">
-          <button class="cat-chip ${t.cat}" onclick="changeCat('${t.id}')" title="Change category">${CAT_LABELS[t.cat]}</button>
+          <button class="cat-chip ${t.cat}" onclick="changeCat('${t.id}')" title="Change category">${CAT_EMOJI[t.cat]} ${CAT_LABELS[t.cat]}</button>
           <span class="task-time">${time}</span>
         </div>
       </div>
@@ -580,7 +593,7 @@
     for (const [val, label] of Object.entries(CAT_LABELS)) {
       const opt = document.createElement('option');
       opt.value = val;
-      opt.textContent = label;
+      opt.textContent = CAT_EMOJI[val] + ' ' + label;
       if (val === task.cat) opt.selected = true;
       select.appendChild(opt);
     }
