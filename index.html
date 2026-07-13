@@ -612,15 +612,33 @@
   }
 
   // --- Export / Import ---
-  function exportTasks() {
+  async function exportTasks() {
     const data = JSON.stringify(tasks, null, 2);
+    const stamp = new Date().toISOString().slice(0, 10);
+    const filename = `tasks-backup-${stamp}.json`;
+    // Home-screen web apps on iOS cannot trigger downloads; use the share sheet there
+    const file = new File([data], filename, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'Task backup' });
+        localStorage.setItem('hw_last_export', Date.now().toString());
+        voiceStatus.textContent = `Backup shared (${tasks.length} tasks). Choose "Save to Files" to keep it.`;
+        setTimeout(() => { voiceStatus.textContent = ''; }, 5000);
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return; // user cancelled the share sheet
+      }
+    }
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'tasks-backup.json';
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+    localStorage.setItem('hw_last_export', Date.now().toString());
+    voiceStatus.textContent = `Backup downloaded (${tasks.length} tasks).`;
+    setTimeout(() => { voiceStatus.textContent = ''; }, 5000);
   }
 
   function importTasks() {
@@ -651,6 +669,16 @@
 
   // --- Init ---
   render();
+
+  // Gentle backup reminder if tasks exist and no export in the last 7 days
+  (function backupReminder() {
+    if (!tasks.length) return;
+    const last = parseInt(localStorage.getItem('hw_last_export') || '0', 10);
+    if (Date.now() - last > 7 * 24 * 60 * 60 * 1000) {
+      voiceStatus.textContent = 'Tip: tap Export (top right) to back up your tasks.';
+      setTimeout(() => { voiceStatus.textContent = ''; }, 8000);
+    }
+  })();
 </script>
 </body>
 </html>
