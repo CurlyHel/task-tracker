@@ -17,6 +17,7 @@
     --personal: #16a34a;
     --erp: #d97706;
     --shopping: #db2777;
+    --liabilities: #475569;
     --bg: #f8fafc;
     --card: #ffffff;
     --text: #1e293b;
@@ -103,6 +104,7 @@
   .filter-btn[data-cat="personal"].active { background: var(--personal); }
   .filter-btn[data-cat="erp"].active      { background: var(--erp); }
   .filter-btn[data-cat="shopping"].active { background: var(--shopping); }
+  .filter-btn[data-cat="liabilities"].active { background: var(--liabilities); }
 
   .add-area {
     margin: 16px;
@@ -232,7 +234,23 @@
   .task-card.cat-personal { border-left-color: var(--personal); }
   .task-card.cat-erp      { border-left-color: var(--erp); }
   .task-card.cat-shopping { border-left-color: var(--shopping); }
+  .task-card.cat-liabilities { border-left-color: var(--liabilities); }
   .task-card.done { opacity: 0.55; }
+
+  /* Drag-to-reorder: suppress iOS text-selection magnifier on long press */
+  .task-card, .task-card * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .task-card .edit-input { -webkit-user-select: text; user-select: text; }
+
+  .task-card.drag-ghost { opacity: 0.3; border-style: dashed; }
+  .drag-clone {
+    position: fixed;
+    z-index: 100;
+    margin: 0;
+    transform: scale(1.03);
+    box-shadow: 0 10px 28px rgba(30,41,59,0.3);
+    pointer-events: none;
+    opacity: 0.97;
+  }
 
   .task-check {
     width: 24px;
@@ -294,6 +312,7 @@
   .cat-chip.personal { background: var(--personal); }
   .cat-chip.erp      { background: var(--erp); }
   .cat-chip.shopping { background: var(--shopping); }
+  .cat-chip.liabilities { background: var(--liabilities); }
 
   .task-time { font-size: 0.72rem; color: var(--muted); }
 
@@ -368,6 +387,7 @@
   <button class="filter-btn" data-cat="personal">🌱 Personal</button>
   <button class="filter-btn" data-cat="erp">💼 ERP Work</button>
   <button class="filter-btn" data-cat="shopping">🛒 Shopping</button>
+  <button class="filter-btn" data-cat="liabilities">💷 Liabilities</button>
 </div>
 
 <div class="add-area">
@@ -385,6 +405,7 @@
       <option value="personal">🌱 Personal</option>
       <option value="erp">💼 ERP Work</option>
       <option value="shopping">🛒 Shopping</option>
+      <option value="liabilities">💷 Liabilities</option>
     </select>
     <button id="save-btn">Save</button>
   </div>
@@ -417,8 +438,8 @@
   }
 
   // --- Category labels ---
-  const CAT_LABELS = { today: 'Today', urgent: 'Urgent', property: 'Property', estate: 'Estate & Admin', personal: 'Personal', erp: 'ERP Work', shopping: 'Shopping' };
-  const CAT_EMOJI = { today: '☀️', urgent: '🔥', property: '🏠', estate: '📋', personal: '🌱', erp: '💼', shopping: '🛒' };
+  const CAT_LABELS = { today: 'Today', urgent: 'Urgent', property: 'Property', estate: 'Estate & Admin', personal: 'Personal', erp: 'ERP Work', shopping: 'Shopping', liabilities: 'Liabilities' };
+  const CAT_EMOJI = { today: '☀️', urgent: '🔥', property: '🏠', estate: '📋', personal: '🌱', erp: '💼', shopping: '🛒', liabilities: '💷' };
 
   // --- Render ---
   function render() {
@@ -596,6 +617,88 @@
     });
     input.addEventListener('blur', commit);
   }
+
+  // --- Hold and drag to reorder (To Do list only) ---
+  (function enableReorder() {
+    const list = document.getElementById('active-list');
+    let pressTimer = null, startX = 0, startY = 0;
+    let dragging = false, card = null, clone = null, offsetY = 0;
+
+    list.addEventListener('touchstart', e => {
+      card = e.target.closest('.task-card');
+      if (!card || e.target.closest('button, .task-check, .edit-input, select')) { card = null; return; }
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+      pressTimer = setTimeout(() => beginDrag(), 450);
+    }, { passive: true });
+
+    function beginDrag() {
+      pressTimer = null;
+      dragging = true;
+      const rect = card.getBoundingClientRect();
+      offsetY = startY - rect.top;
+      clone = card.cloneNode(true);
+      clone.classList.add('drag-clone');
+      clone.classList.remove('drag-ghost');
+      clone.style.width = rect.width + 'px';
+      clone.style.left = rect.left + 'px';
+      clone.style.top = rect.top + 'px';
+      document.body.appendChild(clone);
+      card.classList.add('drag-ghost');
+    }
+
+    list.addEventListener('touchmove', e => {
+      const t = e.touches[0];
+      if (!dragging) {
+        // finger moved before the hold completed: it's a scroll, not a drag
+        if (pressTimer && (Math.abs(t.clientX - startX) > 10 || Math.abs(t.clientY - startY) > 10)) {
+          clearTimeout(pressTimer); pressTimer = null;
+        }
+        return;
+      }
+      e.preventDefault();
+      clone.style.top = (t.clientY - offsetY) + 'px';
+
+      const siblings = [...list.querySelectorAll('.task-card:not(.drag-ghost)')];
+      for (const sib of siblings) {
+        const r = sib.getBoundingClientRect();
+        if (t.clientY > r.top && t.clientY < r.bottom) {
+          if (t.clientY < r.top + r.height / 2) list.insertBefore(card, sib);
+          else list.insertBefore(card, sib.nextSibling);
+          break;
+        }
+      }
+
+      // keep scrolling when dragged near the top or bottom of the screen
+      if (t.clientY < 170) window.scrollBy(0, -8);
+      else if (t.clientY > window.innerHeight - 80) window.scrollBy(0, 8);
+    }, { passive: false });
+
+    function endDrag(e) {
+      clearTimeout(pressTimer); pressTimer = null;
+      if (!dragging) { card = null; return; }
+      dragging = false;
+      if (clone) { clone.remove(); clone = null; }
+      card.classList.remove('drag-ghost');
+      commitOrder();
+      card = null;
+      if (e && e.cancelable) e.preventDefault(); // swallow the ghost tap
+    }
+    list.addEventListener('touchend', endDrag);
+    list.addEventListener('touchcancel', endDrag);
+
+    // Map the new on-screen order back into the master array, leaving
+    // done tasks and tasks hidden by the current filter where they were
+    function commitOrder() {
+      const idsInDom = [...list.querySelectorAll('.task-card')].map(el => el.dataset.id);
+      const positions = [];
+      tasks.forEach((t, i) => { if (idsInDom.includes(t.id)) positions.push(i); });
+      const reordered = idsInDom.map(id => tasks.find(t => t.id === id));
+      positions.forEach((pos, k) => { tasks[pos] = reordered[k]; });
+      save();
+      render();
+    }
+  })();
 
   // --- Change category ---
   function changeCat(id) {
