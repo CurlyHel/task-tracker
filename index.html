@@ -260,6 +260,20 @@
     padding: 2px 8px;
     border-radius: 10px;
     color: white;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .cat-chip::after { content: ' ▾'; opacity: 0.8; }
+
+  .cat-change-select {
+    font-size: 0.78rem;
+    padding: 2px 6px;
+    border: 1.5px solid #2563eb;
+    border-radius: 8px;
+    background: white;
+    color: var(--text);
+    outline: none;
   }
   .cat-chip.today    { background: var(--today); }
   .cat-chip.urgent   { background: var(--urgent); }
@@ -416,7 +430,7 @@
       <div class="task-body">
         <div class="task-text">${escHtml(t.text)}</div>
         <div class="task-meta">
-          <span class="cat-chip ${t.cat}">${CAT_LABELS[t.cat]}</span>
+          <button class="cat-chip ${t.cat}" onclick="changeCat('${t.id}')" title="Change category">${CAT_LABELS[t.cat]}</button>
           <span class="task-time">${time}</span>
         </div>
       </div>
@@ -554,6 +568,34 @@
       if (e.key === 'Escape') { committed = true; render(); }
     });
     input.addEventListener('blur', commit);
+  }
+
+  // --- Change category ---
+  function changeCat(id) {
+    const card = document.querySelector(`.task-card[data-id="${id}"]`);
+    const chip = card.querySelector('.cat-chip');
+    const task = tasks.find(t => t.id === id);
+    const select = document.createElement('select');
+    select.className = 'cat-change-select';
+    for (const [val, label] of Object.entries(CAT_LABELS)) {
+      const opt = document.createElement('option');
+      opt.value = val;
+      opt.textContent = label;
+      if (val === task.cat) opt.selected = true;
+      select.appendChild(opt);
+    }
+    chip.replaceWith(select);
+    select.focus();
+
+    let committed = false;
+    function commit() {
+      if (committed) return;
+      committed = true;
+      if (select.value !== task.cat) { task.cat = select.value; save(); }
+      render();
+    }
+    select.addEventListener('change', commit);
+    select.addEventListener('blur', commit);
   }
 
   // --- Export / Import ---
