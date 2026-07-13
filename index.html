@@ -10,6 +10,8 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
+    --today: #0891b2;
+    --urgent: #dc2626;
     --property: #2563eb;
     --estate: #7c3aed;
     --personal: #16a34a;
@@ -21,6 +23,11 @@
     --muted: #64748b;
     --border: #e2e8f0;
     --radius: 12px;
+  }
+
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   body {
@@ -87,6 +94,8 @@
     border-color: transparent;
   }
   .filter-btn[data-cat="all"].active      { background: #1e293b; }
+  .filter-btn[data-cat="today"].active    { background: var(--today); }
+  .filter-btn[data-cat="urgent"].active   { background: var(--urgent); }
   .filter-btn[data-cat="property"].active { background: var(--property); }
   .filter-btn[data-cat="estate"].active   { background: var(--estate); }
   .filter-btn[data-cat="personal"].active { background: var(--personal); }
@@ -135,6 +144,8 @@
 
   #task-input {
     flex: 1;
+    min-width: 0;
+    width: 100%;
     padding: 14px;
     border: 1.5px solid var(--border);
     border-radius: 10px;
@@ -153,6 +164,7 @@
 
   #cat-select {
     flex: 1;
+    min-width: 0;
     padding: 11px 12px;
     border: 1.5px solid var(--border);
     border-radius: 10px;
@@ -181,6 +193,7 @@
     margin-top: 8px;
     min-height: 18px;
     font-style: italic;
+    overflow-wrap: break-word;
   }
 
   .section-label {
@@ -248,6 +261,8 @@
     border-radius: 10px;
     color: white;
   }
+  .cat-chip.today    { background: var(--today); }
+  .cat-chip.urgent   { background: var(--urgent); }
   .cat-chip.property { background: var(--property); }
   .cat-chip.estate   { background: var(--estate); }
   .cat-chip.personal { background: var(--personal); }
@@ -317,6 +332,8 @@
 
 <div class="filter-bar">
   <button class="filter-btn active" data-cat="all">All</button>
+  <button class="filter-btn" data-cat="today">Today</button>
+  <button class="filter-btn" data-cat="urgent">Urgent</button>
   <button class="filter-btn" data-cat="property">Property</button>
   <button class="filter-btn" data-cat="estate">Estate &amp; Admin</button>
   <button class="filter-btn" data-cat="personal">Personal</button>
@@ -332,6 +349,8 @@
   <div id="voice-status"></div>
   <div class="bottom-row">
     <select id="cat-select">
+      <option value="today">Today</option>
+      <option value="urgent">Urgent</option>
       <option value="property">Property</option>
       <option value="estate">Estate &amp; Admin</option>
       <option value="personal">Personal</option>
@@ -369,7 +388,7 @@
   }
 
   // --- Category labels ---
-  const CAT_LABELS = { property: 'Property', estate: 'Estate & Admin', personal: 'Personal', erp: 'ERP Work', shopping: 'Shopping' };
+  const CAT_LABELS = { today: 'Today', urgent: 'Urgent', property: 'Property', estate: 'Estate & Admin', personal: 'Personal', erp: 'ERP Work', shopping: 'Shopping' };
 
   // --- Render ---
   function render() {
